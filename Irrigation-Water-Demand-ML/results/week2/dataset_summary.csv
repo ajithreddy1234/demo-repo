@@ -9,4 +9,6 @@ mean_etc_mm_day,2.9390555749155567
 mean_iwr_mm_day,1.5137391403142988
 median_iwr_mm_day,0.8539521649960635
 max_iwr_mm_day,5.649528123567854
+mean_allocation_m3_per_ha_day,15.137391403142992
+max_allocation_m3_per_ha_day,56.49528123567854
 zero_iwr_days,248.0

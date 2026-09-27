@@ -38,7 +38,8 @@
 - Training: 2021-2023 (375 rows)
 - Validation: 2024 (125 rows)
 - Final test: 2025, intentionally untouched in Week 2
-- Target: irrigation_requirement_mm
+- ML target: irrigation_requirement_mm
+- Allocation output: net_allocation_m3_per_ha_day = 10 × irrigation_requirement_mm
 
 ## Best Week 2 validation model
 - Model: Random Forest + ET0
@@ -47,4 +48,4 @@
 - R²: 0.966
 
 ## Important interpretation
-The target is a physics-derived reference irrigation requirement produced from FAO crop-water equations and historical meteorology. It is not measured farmer irrigation. Week 3 will tune/finalize models and evaluate exactly once on the untouched 2025 season.
+The target is a physics-derived crop irrigation requirement produced from FAO crop-water equations and historical meteorology. Its intended use is reservoir/dam water-allocation support: predicted depth is converted to net volume per hectare. It is not measured farmer irrigation, and gross reservoir release would additionally require commanded crop area plus conveyance/application-efficiency information. Week 3 will tune/finalize models and evaluate exactly once on the untouched 2025 season.
