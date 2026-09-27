@@ -1,6 +1,6 @@
 # Irrigation Water Demand ML — CE4400
 
-Machine-learning-based estimation of daily irrigation water requirement for grain maize using historical meteorological data and FAO crop-water methodology.
+Machine-learning-based prediction of daily crop irrigation requirement for grain maize to support reservoir/dam water allocation using historical meteorological data and FAO crop-water methodology.
 
 ## Study configuration
 - Study point: Sangareddy, Telangana, India
@@ -17,8 +17,8 @@ Machine-learning-based estimation of daily irrigation water requirement for grai
 1. Download daily weather data.
 2. Clean and validate meteorological variables.
 3. Build the maize crop calendar and Kc curve.
-4. Calculate daily ET0, ETc, effective rainfall and irrigation water requirement.
-5. Create a reproducible processed ML dataset.
+4. Calculate daily ET0, ETc, effective rainfall and net crop irrigation requirement.
+5. Convert predicted/derived depth to net allocation volume per hectare and create a reproducible processed ML dataset.
 6. Run EDA.
 7. Train preliminary regression baselines on 2021–2023 and evaluate on 2024.
 8. Keep 2025 untouched for the final-week test.
