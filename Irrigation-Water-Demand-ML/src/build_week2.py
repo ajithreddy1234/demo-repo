@@ -216,7 +216,7 @@ def finalize_dataset(raw: pd.DataFrame) -> pd.DataFrame:
         "WS2M": "wind_speed_2m_m_s",
         "PRECTOTCORR": "rainfall_mm",
         "PS": "surface_pressure_kpa",
-        "ALLSKY_SFC_SW_DWN": "solar_radiation_kwh_m2_day",
+        "ALLSKY_SFC_SW_DWN": "solar_radiation_mj_m2_day_raw",
     })
 
     columns = [
@@ -408,7 +408,7 @@ def write_report(df: pd.DataFrame, summary: pd.DataFrame, metrics: pd.DataFrame)
 ## Data pipeline completed
 1. Downloaded daily meteorological data for 2021–2025.
 2. Checked NASA missing-value sentinel and chronological completeness.
-3. Converted POWER shortwave radiation to MJ/m²/day.
+3. Verified POWER shortwave radiation units from API metadata (MJ/m²/day).
 4. Calculated FAO-56 reference evapotranspiration (ET0).
 5. Generated a 125-day maize Kc curve for each season.
 6. Calculated ETc = Kc × ET0.
