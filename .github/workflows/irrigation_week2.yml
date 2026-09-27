@@ -1,0 +1,38 @@
+name: Build CE4400 Week 2 Results
+
+on:
+  push:
+    paths:
+      - "Irrigation-Water-Demand-ML/src/**"
+      - "Irrigation-Water-Demand-ML/config/**"
+      - "Irrigation-Water-Demand-ML/requirements.txt"
+      - ".github/workflows/irrigation_week2.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-week2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r Irrigation-Water-Demand-ML/requirements.txt
+
+      - name: Build dataset, EDA and baseline results
+        run: python Irrigation-Water-Demand-ML/src/build_week2.py
+
+      - name: Commit generated Week 2 outputs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Irrigation-Water-Demand-ML/data Irrigation-Water-Demand-ML/figures Irrigation-Water-Demand-ML/results Irrigation-Water-Demand-ML/reports
+          if ! git diff --cached --quiet; then
+            git commit -m "Generate CE4400 Week 2 dataset and baseline results"
+            git push
+          fi
