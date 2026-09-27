@@ -157,7 +157,9 @@ def effective_rainfall_monthly_allocated(df: pd.DataFrame) -> pd.DataFrame:
 def finalize_dataset(raw: pd.DataFrame) -> pd.DataFrame:
     crop = effective_rainfall_monthly_allocated(crop_calendar(compute_eto(raw)))
     crop["etc_mm_day"] = crop["kc"] * crop["eto_mm_day"]
-    crop["irrigation_requirement_mm"] = np.maximum(0, crop["etc_mm_day"] - crop["effective_rain_mm"])\n    # Allocation-ready output: 1 mm over 1 hectare = 10 m^3.\n    crop["net_allocation_m3_per_ha_day"] = 10.0 * crop["irrigation_requirement_mm"]
+    crop["irrigation_requirement_mm"] = np.maximum(0, crop["etc_mm_day"] - crop["effective_rain_mm"])
+    # Allocation-ready output: 1 mm over 1 hectare = 10 m^3.
+    crop["net_allocation_m3_per_ha_day"] = 10.0 * crop["irrigation_requirement_mm"]
     crop = crop.rename(columns={
         "T2M": "temp_mean_c", "T2M_MAX": "temp_max_c", "T2M_MIN": "temp_min_c", "RH2M": "relative_humidity_pct",
         "WS2M": "wind_speed_2m_m_s", "PRECTOTCORR": "rainfall_mm", "PS": "surface_pressure_kpa",
