@@ -157,20 +157,20 @@ def effective_rainfall_monthly_allocated(df: pd.DataFrame) -> pd.DataFrame:
 def finalize_dataset(raw: pd.DataFrame) -> pd.DataFrame:
     crop = effective_rainfall_monthly_allocated(crop_calendar(compute_eto(raw)))
     crop["etc_mm_day"] = crop["kc"] * crop["eto_mm_day"]
-    crop["irrigation_requirement_mm"] = np.maximum(0, crop["etc_mm_day"] - crop["effective_rain_mm"])
+    crop["irrigation_requirement_mm"] = np.maximum(0, crop["etc_mm_day"] - crop["effective_rain_mm"])\n    # Allocation-ready output: 1 mm over 1 hectare = 10 m^3.\n    crop["net_allocation_m3_per_ha_day"] = 10.0 * crop["irrigation_requirement_mm"]
     crop = crop.rename(columns={
         "T2M": "temp_mean_c", "T2M_MAX": "temp_max_c", "T2M_MIN": "temp_min_c", "RH2M": "relative_humidity_pct",
         "WS2M": "wind_speed_2m_m_s", "PRECTOTCORR": "rainfall_mm", "PS": "surface_pressure_kpa",
         "ALLSKY_SFC_SW_DWN": "solar_radiation_mj_m2_day_raw",
     })
-    columns = ["season_year", "days_after_sowing", "crop_stage", "kc", "temp_mean_c", "temp_max_c", "temp_min_c", "relative_humidity_pct", "wind_speed_2m_m_s", "solar_radiation_mj_m2_day_raw", "solar_radiation_mj_m2_day", "rainfall_mm", "surface_pressure_kpa", "eto_mm_day", "etc_mm_day", "effective_rain_ratio", "effective_rain_mm", "irrigation_requirement_mm"]
+    columns = ["season_year", "days_after_sowing", "crop_stage", "kc", "temp_mean_c", "temp_max_c", "temp_min_c", "relative_humidity_pct", "wind_speed_2m_m_s", "solar_radiation_mj_m2_day_raw", "solar_radiation_mj_m2_day", "rainfall_mm", "surface_pressure_kpa", "eto_mm_day", "etc_mm_day", "effective_rain_ratio", "effective_rain_mm", "irrigation_requirement_mm", "net_allocation_m3_per_ha_day"]
     crop = crop[columns]
     crop.to_csv(PROC_DIR / "maize_irrigation_dataset_2021_2025.csv")
     return crop
 
 
 def dataset_summary(df: pd.DataFrame) -> pd.DataFrame:
-    summary = pd.DataFrame({"metric": ["rows", "seasons", "missing_cells", "mean_temperature_c", "total_rainfall_mm", "mean_eto_mm_day", "mean_etc_mm_day", "mean_iwr_mm_day", "median_iwr_mm_day", "max_iwr_mm_day", "zero_iwr_days"], "value": [len(df), df["season_year"].nunique(), int(df.isna().sum().sum()), df["temp_mean_c"].mean(), df["rainfall_mm"].sum(), df["eto_mm_day"].mean(), df["etc_mm_day"].mean(), df["irrigation_requirement_mm"].mean(), df["irrigation_requirement_mm"].median(), df["irrigation_requirement_mm"].max(), int((df["irrigation_requirement_mm"] == 0).sum())]})
+    summary = pd.DataFrame({"metric": ["rows", "seasons", "missing_cells", "mean_temperature_c", "total_rainfall_mm", "mean_eto_mm_day", "mean_etc_mm_day", "mean_iwr_mm_day", "median_iwr_mm_day", "max_iwr_mm_day", "mean_allocation_m3_per_ha_day", "max_allocation_m3_per_ha_day", "zero_iwr_days"], "value": [len(df), df["season_year"].nunique(), int(df.isna().sum().sum()), df["temp_mean_c"].mean(), df["rainfall_mm"].sum(), df["eto_mm_day"].mean(), df["etc_mm_day"].mean(), df["irrigation_requirement_mm"].mean(), df["irrigation_requirement_mm"].median(), df["irrigation_requirement_mm"].max(), df["net_allocation_m3_per_ha_day"].mean(), df["net_allocation_m3_per_ha_day"].max(), int((df["irrigation_requirement_mm"] == 0).sum())]})
     summary.to_csv(RESULT_DIR / "dataset_summary.csv", index=False)
     return summary
 
@@ -178,15 +178,15 @@ def dataset_summary(df: pd.DataFrame) -> pd.DataFrame:
 def make_plots(df: pd.DataFrame) -> None:
     d = df[df["season_year"] == 2024]
     fig, ax = plt.subplots(figsize=(10, 5)); ax.plot(d.index, d["eto_mm_day"], label="ET0"); ax.plot(d.index, d["etc_mm_day"], label="ETc"); ax.plot(d.index, d["irrigation_requirement_mm"], label="IWR"); ax.set_title("2024 Maize Season: ET0, ETc and IWR"); ax.set_ylabel("mm/day"); ax.legend(); fig.autofmt_xdate(); fig.tight_layout(); fig.savefig(FIG_DIR / "01_2024_water_balance.png", dpi=180); plt.close(fig)
-    fig, ax = plt.subplots(figsize=(9, 4.5)); ax.plot(d["days_after_sowing"], d["kc"]); ax.set_title("Grain Maize Kc Curve"); ax.set_xlabel("Days after sowing"); ax.set_ylabel("Kc"); fig.tight_layout(); fig.savefig(FIG_DIR / "02_kc_curve.png", dpi=180); plt.close(fig)
-    fig, ax = plt.subplots(figsize=(8, 4.5)); ax.hist(df["irrigation_requirement_mm"].dropna(), bins=30); ax.set_title("Distribution of Derived Daily IWR"); ax.set_xlabel("IWR (mm/day)"); ax.set_ylabel("Days"); fig.tight_layout(); fig.savefig(FIG_DIR / "03_iwr_distribution.png", dpi=180); plt.close(fig)
-    fig, ax = plt.subplots(figsize=(7, 5)); ax.scatter(df["rainfall_mm"], df["irrigation_requirement_mm"], alpha=0.5); ax.set_title("Rainfall vs Irrigation Requirement"); ax.set_xlabel("Rainfall (mm/day)"); ax.set_ylabel("IWR (mm/day)"); fig.tight_layout(); fig.savefig(FIG_DIR / "04_rainfall_vs_iwr.png", dpi=180); plt.close(fig)
+    fig, ax = plt.subplots(figsize=(10, 4.8)); ax.plot(d.index, d["net_allocation_m3_per_ha_day"]); ax.set_title("2024 Maize Season: Net Reservoir Allocation Requirement per Hectare"); ax.set_ylabel("m³/ha/day"); ax.set_xlabel("Date"); fig.autofmt_xdate(); fig.tight_layout(); fig.savefig(FIG_DIR / "02_2024_allocation_m3_per_ha.png", dpi=180); plt.close(fig)\n    fig, ax = plt.subplots(figsize=(9, 4.5)); ax.plot(d["days_after_sowing"], d["kc"]); ax.set_title("Grain Maize Kc Curve"); ax.set_xlabel("Days after sowing"); ax.set_ylabel("Kc"); fig.tight_layout(); fig.savefig(FIG_DIR / "03_kc_curve.png", dpi=180); plt.close(fig)
+    fig, ax = plt.subplots(figsize=(8, 4.5)); ax.hist(df["irrigation_requirement_mm"].dropna(), bins=30); ax.set_title("Distribution of Derived Daily IWR"); ax.set_xlabel("IWR (mm/day)"); ax.set_ylabel("Days"); fig.tight_layout(); fig.savefig(FIG_DIR / "04_iwr_distribution.png", dpi=180); plt.close(fig)
+    fig, ax = plt.subplots(figsize=(7, 5)); ax.scatter(df["rainfall_mm"], df["irrigation_requirement_mm"], alpha=0.5); ax.set_title("Rainfall vs Irrigation Requirement"); ax.set_xlabel("Rainfall (mm/day)"); ax.set_ylabel("IWR (mm/day)"); fig.tight_layout(); fig.savefig(FIG_DIR / "05_rainfall_vs_iwr.png", dpi=180); plt.close(fig)
     cols = ["temp_mean_c", "relative_humidity_pct", "wind_speed_2m_m_s", "solar_radiation_mj_m2_day", "rainfall_mm", "kc", "eto_mm_day", "irrigation_requirement_mm"]
     corr = df[cols].corr(); fig, ax = plt.subplots(figsize=(9, 7)); im = ax.imshow(corr, vmin=-1, vmax=1, cmap="coolwarm"); ax.set_xticks(range(len(cols)), [c.replace("_", " ") for c in cols], rotation=45, ha="right"); ax.set_yticks(range(len(cols)), [c.replace("_", " ") for c in cols]);
     for i in range(len(cols)):
         for j in range(len(cols)):
             ax.text(j, i, f"{corr.iloc[i,j]:.2f}", ha="center", va="center", fontsize=7)
-    fig.colorbar(im, ax=ax, label="Correlation"); ax.set_title("Correlation Matrix"); fig.tight_layout(); fig.savefig(FIG_DIR / "05_correlation_matrix.png", dpi=180); plt.close(fig)
+    fig.colorbar(im, ax=ax, label="Correlation"); ax.set_title("Correlation Matrix"); fig.tight_layout(); fig.savefig(FIG_DIR / "06_correlation_matrix.png", dpi=180); plt.close(fig)
 
 
 def model_pipeline(model, include_eto: bool):
@@ -217,7 +217,7 @@ def evaluate_models(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     results.to_csv(RESULT_DIR / "baseline_validation_metrics.csv", index=False)
     pred_table.to_csv(RESULT_DIR / "validation_2024_predictions.csv")
     best = results.iloc[0]["model"]
-    fig, ax = plt.subplots(figsize=(6, 6)); ax.scatter(pred_table["actual_iwr_mm"], pred_table[best], alpha=0.65); maxv = max(pred_table["actual_iwr_mm"].max(), pred_table[best].max()); ax.plot([0, maxv], [0, maxv], linestyle="--"); ax.set_xlabel("Actual derived IWR (mm/day)"); ax.set_ylabel("Predicted IWR (mm/day)"); ax.set_title(f"2024 Validation: {best}"); fig.tight_layout(); fig.savefig(FIG_DIR / "06_best_model_actual_vs_predicted.png", dpi=180); plt.close(fig)
+    fig, ax = plt.subplots(figsize=(6, 6)); ax.scatter(pred_table["actual_iwr_mm"], pred_table[best], alpha=0.65); maxv = max(pred_table["actual_iwr_mm"].max(), pred_table[best].max()); ax.plot([0, maxv], [0, maxv], linestyle="--"); ax.set_xlabel("Actual derived IWR (mm/day)"); ax.set_ylabel("Predicted IWR (mm/day)"); ax.set_title(f"2024 Validation: {best}"); fig.tight_layout(); fig.savefig(FIG_DIR / "07_best_model_actual_vs_predicted.png", dpi=180); plt.close(fig)
     return results, pred_table
 
 
@@ -263,7 +263,7 @@ def write_report(summary: pd.DataFrame, metrics: pd.DataFrame) -> None:
 - Training: 2021-2023 ({int(metrics.iloc[0]['train_rows'])} rows)
 - Validation: 2024 ({int(metrics.iloc[0]['validation_rows'])} rows)
 - Final test: 2025, intentionally untouched in Week 2
-- Target: irrigation_requirement_mm
+- ML target: irrigation_requirement_mm\n- Allocation output: net_allocation_m3_per_ha_day = 10 × irrigation_requirement_mm
 
 ## Best Week 2 validation model
 - Model: {best['model']}
@@ -272,7 +272,7 @@ def write_report(summary: pd.DataFrame, metrics: pd.DataFrame) -> None:
 - R²: {best['R2']:.3f}
 
 ## Important interpretation
-The target is a physics-derived reference irrigation requirement produced from FAO crop-water equations and historical meteorology. It is not measured farmer irrigation. Week 3 will tune/finalize models and evaluate exactly once on the untouched 2025 season.
+The target is a physics-derived crop irrigation requirement produced from FAO crop-water equations and historical meteorology. Its intended use is reservoir/dam water-allocation support: predicted depth is converted to net volume per hectare. It is not measured farmer irrigation, and gross reservoir release would additionally require commanded crop area plus conveyance/application-efficiency information. Week 3 will tune/finalize models and evaluate exactly once on the untouched 2025 season.
 """
     (REPORT_DIR / "WEEK2_PROGRESS.md").write_text(report)
 
