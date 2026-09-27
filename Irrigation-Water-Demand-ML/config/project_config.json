@@ -1,0 +1,28 @@
+{
+  "study_area": {
+    "name": "Sangareddy, Telangana, India",
+    "latitude": 17.624775,
+    "longitude": 78.086686,
+    "elevation_m": 520
+  },
+  "period": {
+    "start": "2021-01-01",
+    "end": "2025-12-31"
+  },
+  "crop": {
+    "name": "Grain maize",
+    "sowing_month": 6,
+    "sowing_day": 15,
+    "stage_days": {
+      "initial": 20,
+      "development": 35,
+      "mid_season": 40,
+      "late_season": 30
+    },
+    "kc": {
+      "initial": 0.30,
+      "mid": 1.20,
+      "end": 0.35
+    }
+  }
+}
