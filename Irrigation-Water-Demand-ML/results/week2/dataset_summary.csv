@@ -1,0 +1,12 @@
+metric,value
+rows,625.0
+seasons,5.0
+missing_cells,0.0
+mean_temperature_c,25.220256
+total_rainfall_mm,4134.120000000001
+mean_eto_mm_day,11.076308444901395
+mean_etc_mm_day,8.950933991796239
+mean_iwr_mm_day,6.357966567702757
+median_iwr_mm_day,5.07789344285635
+max_iwr_mm_day,20.83961056193374
+zero_iwr_days,138.0
