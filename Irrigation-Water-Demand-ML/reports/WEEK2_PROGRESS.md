@@ -12,7 +12,7 @@
 ## Data pipeline completed
 1. Downloaded daily meteorological data for 2021–2025.
 2. Checked NASA missing-value sentinel and chronological completeness.
-3. Converted POWER shortwave radiation to MJ/m²/day.
+3. Verified POWER shortwave radiation units from API metadata (MJ/m²/day).
 4. Calculated FAO-56 reference evapotranspiration (ET0).
 5. Generated a 125-day maize Kc curve for each season.
 6. Calculated ETc = Kc × ET0.
