@@ -4,13 +4,13 @@
 - Location: Sangareddy, Telangana, India
 - Coordinates: 17.624775, 78.086686
 - Crop: Grain maize
-- Seasons: 2021–2025
+- Seasons: 2021-2025
 - Sowing date assumption: 15 June
 - Crop duration: 125 days
 - Weather source: NASA POWER Daily Point API
 
 ## Data pipeline completed
-1. Downloaded daily meteorological data for 2021–2025.
+1. Downloaded daily meteorological data for 2021-2025.
 2. Checked NASA missing-value sentinel and chronological completeness.
 3. Verified POWER shortwave radiation units from API metadata (MJ/m²/day).
 4. Calculated FAO-56 reference evapotranspiration (ET0).
@@ -27,24 +27,24 @@
 - Missing cells in processed dataset: 0
 - Mean crop-season temperature: 25.22 °C
 - Total crop-season rainfall across five seasons: 4134.12 mm
-- Mean ET0: 11.08 mm/day
-- Mean ETc: 8.95 mm/day
-- Mean derived IWR: 6.36 mm/day
-- Median derived IWR: 5.08 mm/day
-- Maximum derived IWR: 20.84 mm/day
-- Zero-IWR days: 138
+- Mean ET0: 3.75 mm/day
+- Mean ETc: 2.94 mm/day
+- Mean derived IWR: 1.51 mm/day
+- Median derived IWR: 0.85 mm/day
+- Maximum derived IWR: 5.65 mm/day
+- Zero-IWR days: 248
 
 ## Preliminary ML protocol
-- Training: 2021–2023 (375 rows)
+- Training: 2021-2023 (375 rows)
 - Validation: 2024 (125 rows)
 - Final test: 2025, intentionally untouched in Week 2
 - Target: irrigation_requirement_mm
 
 ## Best Week 2 validation model
 - Model: Random Forest + ET0
-- MAE: 0.877 mm/day
-- RMSE: 1.330 mm/day
-- R²: 0.936
+- MAE: 0.178 mm/day
+- RMSE: 0.298 mm/day
+- R²: 0.966
 
 ## Important interpretation
 The target is a physics-derived reference irrigation requirement produced from FAO crop-water equations and historical meteorology. It is not measured farmer irrigation. Week 3 will tune/finalize models and evaluate exactly once on the untouched 2025 season.
