@@ -222,7 +222,7 @@ def finalize_dataset(raw: pd.DataFrame) -> pd.DataFrame:
     columns = [
         "season_year", "days_after_sowing", "crop_stage", "kc",
         "temp_mean_c", "temp_max_c", "temp_min_c", "relative_humidity_pct",
-        "wind_speed_2m_m_s", "solar_radiation_kwh_m2_day",
+        "wind_speed_2m_m_s", "solar_radiation_mj_m2_day_raw",
         "solar_radiation_mj_m2_day", "rainfall_mm", "surface_pressure_kpa",
         "eto_mm_day", "etc_mm_day", "effective_rain_ratio",
         "effective_rain_mm", "irrigation_requirement_mm",
