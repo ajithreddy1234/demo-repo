@@ -3,7 +3,7 @@ name: Build CE4400 Week 2 Results
 on:
   push:
     paths:
-      - "Irrigation-Water-Demand-ML/src/**"
+      - "Irrigation-Water-Demand-ML/src/build_week2.py"
       - "Irrigation-Water-Demand-ML/config/**"
       - "Irrigation-Water-Demand-ML/requirements.txt"
       - ".github/workflows/irrigation_week2.yml"
