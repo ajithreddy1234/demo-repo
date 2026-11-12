@@ -306,6 +306,7 @@ def write_report(df, validation_results, final_results, best_name, best_include_
         f"- Validation R2: {val_best['R2']:.4f}",
         "",
         "## Final 2025 test results",
+        "All candidate models are shown for comparison, but the deployed/final model was locked using 2024 validation before consulting these test results.",
         final_results.to_string(index=False),
         "",
         "## Selected final model",
@@ -403,28 +404,31 @@ def main():
     final_results.to_csv(RESULT_DIR / "final_test_metrics_2025.csv", index=False)
     predictions.to_csv(RESULT_DIR / "test_predictions_2025.csv")
 
-    best_name = final_results.iloc[0]["model"]
-    best_metrics = final_results.iloc[0].to_dict()
-    best_pipe, best_include_eto = fitted[best_name]
-    best_pred = predictions[best_name].to_numpy()
+    # Lock the final model using 2024 validation only. The 2025 test set is never
+    # used for model selection.
+    selected_name = validation_results.iloc[0]["model"]
+    selected_metrics = final_results[final_results["model"] == selected_name].iloc[0].to_dict()
+    selected_pipe, selected_include_eto = fitted[selected_name]
+    selected_pred = predictions[selected_name].to_numpy()
 
-    joblib.dump(best_pipe, MODEL_DIR / "best_model.joblib")
+    joblib.dump(selected_pipe, MODEL_DIR / "best_model.joblib")
     (MODEL_DIR / "best_model_metadata.json").write_text(json.dumps({
-        "model": best_name,
-        "include_eto": best_include_eto,
-        "features": feature_names(best_include_eto),
+        "model": selected_name,
+        "selection_basis": "lowest 2024 validation RMSE",
+        "include_eto": selected_include_eto,
+        "features": feature_names(selected_include_eto),
         "target": TARGET,
         "training_seasons": [2021, 2022, 2023, 2024],
         "test_season": 2025,
     }, indent=2))
 
-    importance = plot_outputs(final_results, test, best_pred, best_name, best_pipe, best_include_eto)
-    stage = stagewise(test, best_pred)
-    alloc = allocation_summary(test, best_pred)
+    importance = plot_outputs(final_results, test, selected_pred, selected_name, selected_pipe, selected_include_eto)
+    stage = stagewise(test, selected_pred)
+    alloc = allocation_summary(test, selected_pred)
 
     write_report(
-        df, validation_results, final_results, best_name, best_include_eto,
-        best_metrics, alloc, importance, stage
+        df, validation_results, final_results, selected_name, selected_include_eto,
+        selected_metrics, alloc, importance, stage
     )
 
     print(validation_results)
