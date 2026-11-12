@@ -44,7 +44,7 @@
 ## Best Week 2 validation model
 - Model: Random Forest + ET0
 - MAE: 0.178 mm/day
-- RMSE: 0.299 mm/day
+- RMSE: 0.298 mm/day
 - R²: 0.966
 
 ## Important interpretation

@@ -39,8 +39,8 @@ All candidate models are shown for comparison, but the deployed/final model was 
                model features  train_rows  test_rows  MAE_mm_day  RMSE_mm_day       R2  MAE_m3_per_ha_day  RMSE_m3_per_ha_day
        XGBoost + ET0  raw+ET0         500        125    0.125429     0.212114 0.981809           1.254285            2.121140
              XGBoost      raw         500        125    0.134860     0.220123 0.980410           1.348598            2.201226
- Random Forest + ET0  raw+ET0         500        125    0.156576     0.272133 0.970058           1.565762            2.721326
-       Random Forest      raw         500        125    0.161435     0.285201 0.967113           1.614352            2.852009
+ Random Forest + ET0  raw+ET0         500        125    0.156771     0.271150 0.970274           1.567715            2.711501
+       Random Forest      raw         500        125    0.162584     0.287631 0.966551           1.625837            2.876308
 Neural Network + ET0  raw+ET0         500        125    0.208770     0.317750 0.959179           2.087700            3.177499
        Decision Tree      raw         500        125    0.274342     0.477218 0.907923           2.743417            4.772180
    Linear Regression      raw         500        125    0.741827     0.973691 0.616683           7.418271            9.736907
