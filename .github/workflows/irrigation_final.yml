@@ -24,8 +24,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r Irrigation-Water-Demand-ML/requirements.txt
 
-      - name: Rebuild validated dataset
-        run: python Irrigation-Water-Demand-ML/src/build_week2.py
+      - name: Run project sanity tests
+        run: python -m unittest discover -s Irrigation-Water-Demand-ML/tests -p "test_*.py"\n\n      - name: Rebuild validated dataset\n        run: python Irrigation-Water-Demand-ML/src/build_week2.py
 
       - name: Train final models and evaluate 2025
         run: python Irrigation-Water-Demand-ML/src/build_final.py
