@@ -6,6 +6,7 @@ on:
       - "Irrigation-Water-Demand-ML/src/build_week2.py"
       - "Irrigation-Water-Demand-ML/src/build_final.py"
       - "Irrigation-Water-Demand-ML/src/allocation_from_iwr.py"
+      - "Irrigation-Water-Demand-ML/src/reservoir_optimizer.py"
       - "Irrigation-Water-Demand-ML/tests/**"
       - "Irrigation-Water-Demand-ML/config/**"
       - "Irrigation-Water-Demand-ML/requirements.txt"
@@ -41,6 +42,9 @@ jobs:
 
       - name: Train final models and evaluate 2025
         run: python Irrigation-Water-Demand-ML/src/build_final.py
+
+      - name: Optimize reservoir release under constrained-water stress test
+        run: python Irrigation-Water-Demand-ML/src/reservoir_optimizer.py --area-ha 1000 --overall-efficiency 0.70 --available-fraction 0.85 --daily-cap-factor 1.40
 
       - name: Commit generated project outputs
         run: |
