@@ -262,6 +262,51 @@ def run_scenario(
     return out, summary
 
 
+
+def scenario_metrics(
+    area_ha: float,
+    overall_efficiency: float,
+    available_fraction: float,
+    daily_cap_factor: float,
+    scenario_name: str,
+):
+    pred = pd.read_csv(PRED_PATH, parse_dates=["date"]).set_index("date")
+    iwr = pred["XGBoost"].to_numpy(dtype=float)
+    net_demand = 10.0 * iwr * area_ha
+    gross_demand = net_demand / overall_efficiency
+
+    full_gross_requirement = float(gross_demand.sum())
+    available_water = available_fraction * full_gross_requirement
+    daily_cap = daily_cap_factor * float(gross_demand.mean())
+
+    release, max_relative_deficit = optimize_releases(
+        gross_demand,
+        available_water,
+        daily_cap,
+    )
+
+    demand_met_fraction = np.divide(
+        release,
+        gross_demand,
+        out=np.ones_like(release),
+        where=gross_demand > 1e-12,
+    )
+    deficit = np.maximum(gross_demand - release, 0.0)
+
+    return {
+        "scenario": scenario_name,
+        "available_fraction": available_fraction,
+        "daily_cap_factor": daily_cap_factor,
+        "full_gross_requirement_m3": full_gross_requirement,
+        "available_water_m3": available_water,
+        "optimized_release_m3": float(release.sum()),
+        "gross_deficit_m3": float(deficit.sum()),
+        "water_budget_utilization_pct": 100.0 * float(release.sum()) / available_water if available_water else 0.0,
+        "minimum_daily_demand_met_pct": 100.0 * float(demand_met_fraction.min()),
+        "mean_daily_demand_met_pct": 100.0 * float(demand_met_fraction.mean()),
+        "maximum_relative_deficit_pct": 100.0 * max_relative_deficit,
+    }
+
 def main():
     parser = argparse.ArgumentParser(
         description="Optimize reservoir release for predicted crop irrigation demand."
@@ -288,8 +333,44 @@ def main():
         available_fraction=args.available_fraction,
         daily_cap_factor=args.daily_cap_factor,
     )
+    comparison = pd.DataFrame([
+        scenario_metrics(
+            area_ha=args.area_ha,
+            overall_efficiency=args.overall_efficiency,
+            available_fraction=1.0,
+            daily_cap_factor=10.0,
+            scenario_name="Full supply, unconstrained release",
+        ),
+        scenario_metrics(
+            area_ha=args.area_ha,
+            overall_efficiency=args.overall_efficiency,
+            available_fraction=0.85,
+            daily_cap_factor=10.0,
+            scenario_name="15% seasonal shortage only",
+        ),
+        scenario_metrics(
+            area_ha=args.area_ha,
+            overall_efficiency=args.overall_efficiency,
+            available_fraction=args.available_fraction,
+            daily_cap_factor=args.daily_cap_factor,
+            scenario_name="15% shortage + daily release cap",
+        ),
+    ])
+    comparison.to_csv(RESULT_DIR / "reservoir_scenario_comparison_2025.csv", index=False)
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.bar(comparison["scenario"], comparison["minimum_daily_demand_met_pct"])
+    ax.set_ylabel("Minimum daily demand met (%)")
+    ax.set_title("Reservoir Constraint Scenarios")
+    ax.tick_params(axis="x", rotation=15)
+    fig.tight_layout()
+    fig.savefig(FIG_DIR / "11_reservoir_scenario_comparison.png", dpi=180)
+    plt.close(fig)
+
     for key, value in summary.items():
         print(f"{key}: {value}")
+    print("\nScenario comparison:")
+    print(comparison.to_string(index=False))
 
 
 if __name__ == "__main__":
