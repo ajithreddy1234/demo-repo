@@ -47,5 +47,30 @@ Net allocation = 10 x IWR x crop area
 
 Gross reservoir release requires actual conveyance and field-application efficiencies and is therefore computed only when those real values are supplied.
 
-## 6. Scope boundary
-This is a demand-estimation and decision-support prototype. It does not claim measured dam-release prediction, real-time reservoir optimization, or a genuine PINN because field soil-water states and defensible differential-equation boundary conditions are not available.
+## 6. Reservoir-constrained optimization
+
+Predicted IWR is converted into net crop demand:
+
+Net demand (m3/day) = 10 x IWR (mm/day) x crop area (ha)
+
+Gross release demand is then:
+
+Gross demand = Net demand / overall delivery efficiency
+
+For a seasonal available-water budget W and daily release-capacity C, daily releases x_t are optimized subject to:
+
+- 0 <= x_t <= daily gross demand_t
+- x_t <= C
+- sum(x_t) <= W
+
+The primary objective minimizes the maximum relative daily deficit. A second stage maximizes total delivered water while retaining the optimal fairness level.
+
+Three scenarios are evaluated on the 2025 predicted demand:
+- full supply with no effective daily-cap constraint,
+- 15% seasonal shortage with no effective daily-cap constraint,
+- 15% seasonal shortage together with a finite daily release cap.
+
+This separates shortage caused by insufficient seasonal water from shortage caused by delivery/conveyance capacity.
+
+## 7. Scope boundary
+This is a demand-prediction and reservoir-allocation optimization prototype. The optimization is scenario-driven and does not claim to reproduce an actual reservoir operating policy because measured storage, inflows, command-area acreage, canal capacity and operating-rule data have not been supplied. It also does not claim a genuine PINN because field soil-water states and defensible differential-equation boundary conditions are unavailable.
