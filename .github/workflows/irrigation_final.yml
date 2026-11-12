@@ -1,0 +1,41 @@
+name: Build CE4400 Final Project
+
+on:
+  push:
+    paths:
+      - "Irrigation-Water-Demand-ML/src/**"
+      - "Irrigation-Water-Demand-ML/config/**"
+      - "Irrigation-Water-Demand-ML/requirements.txt"
+      - ".github/workflows/irrigation_final.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-final:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r Irrigation-Water-Demand-ML/requirements.txt
+
+      - name: Rebuild validated dataset
+        run: python Irrigation-Water-Demand-ML/src/build_week2.py
+
+      - name: Train final models and evaluate 2025
+        run: python Irrigation-Water-Demand-ML/src/build_final.py
+
+      - name: Commit final project outputs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Irrigation-Water-Demand-ML/data Irrigation-Water-Demand-ML/figures Irrigation-Water-Demand-ML/results Irrigation-Water-Demand-ML/reports Irrigation-Water-Demand-ML/models
+          if ! git diff --cached --quiet; then
+            git commit -m "Generate final CE4400 project results"
+            git push
+          fi
