@@ -23,12 +23,12 @@
   "api_header": {
     "title": "NASA/POWER Source Native Resolution Daily Data",
     "api": {
-      "version": "v2.10.0",
+      "version": "v2.10.3",
       "name": "POWER Daily API"
     },
     "sources": [
-      "SYN1DEG",
       "MERRA2",
+      "SYN1DEG",
       "POWER"
     ],
     "fill_value": -999.0,
