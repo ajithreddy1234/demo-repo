@@ -60,6 +60,53 @@ Neural Network + ET0  raw+ET0         500        125    0.208770     0.317750 0.
 - Reference peak daily requirement: 50.92 m3/ha/day
 - Predicted peak daily requirement: 50.74 m3/ha/day
 
+
+## Reservoir-constrained allocation optimization
+
+To move beyond demand prediction, the final project adds a linear-programming reservoir release optimizer.
+
+The optimizer uses the validation-selected XGBoost daily IWR predictions and converts them to gross release demand using crop area and overall delivery efficiency. Daily release is constrained by:
+
+1. the predicted gross irrigation demand for that day,
+2. a daily release/canal-capacity limit,
+3. the total seasonal irrigation-water budget.
+
+The primary optimization minimizes the maximum relative daily deficit over the season. A second stage maximizes total delivered water while preserving the best achievable fairness level.
+
+### Stress-test scenario definition
+The optimization demonstration uses:
+- maize area = 1000 ha,
+- overall delivery efficiency = 0.70,
+- either 100% or 85% of full seasonal gross requirement,
+- either an effectively unconstrained daily capacity or a cap of 1.4 times mean daily gross demand.
+
+These are explicit stress-test assumptions, not measured operating-reservoir inputs.
+
+### Full predicted gross seasonal requirement
+For the 2025 predicted maize demand:
+
+**2,258,198.07 m3**
+
+### Scenario comparison
+
+| Scenario | Available seasonal water | Optimized release | Water-budget utilization | Minimum daily demand met | Maximum relative deficit |
+|---|---:|---:|---:|---:|---:|
+| Full supply, unconstrained release | 2,258,198 m3 | 2,258,198 m3 | 100.00% | 100.00% | 0.00% |
+| 15% seasonal shortage only | 1,919,468 m3 | 1,919,468 m3 | 100.00% | 85.00% | 15.00% |
+| 15% shortage + daily release cap | 1,919,468 m3 | 1,469,152 m3 | 76.54% | 34.89% | 65.11% |
+
+In the combined shortage-and-capacity case, **450,316.67 m3** of the allocated seasonal water remains unused. The reason is not lack of seasonal storage allocation; it is the inability to deliver enough water on peak-demand days because the daily release-capacity constraint becomes binding.
+
+This is an important water-resources result: reservoir adequacy depends not only on total seasonal water availability, but also on whether the canal/release system can deliver water at the rate demanded by the crop.
+
+### Why this upgrade matters
+The project now answers two different questions:
+
+1. **Prediction:** How much irrigation water will the crop require?
+2. **Decision support:** Given limited seasonal water and delivery capacity, how should reservoir releases be scheduled?
+
+This turns the work from a regression-only study into a combined ML and optimization framework for irrigation allocation.
+
 ## Most influential final-model inputs
 Top five permutation-importance features: rainfall_mm, kc, solar_radiation_mj_m2_day, relative_humidity_pct, temp_max_c
 
@@ -76,7 +123,7 @@ late_season    30               0.897406               1.020227    0.161456
 3. Effective rainfall is empirical, not directly measured field infiltration.
 4. Soil moisture, runoff, deep percolation and canal losses are not directly observed.
 5. A genuine PINN is not claimed because measured soil-water states and defensible boundary/initial conditions are unavailable.
-6. Current output is net crop demand. Gross dam release requires real command-area acreage and documented delivery efficiencies.
+6. The optimization demonstration uses scenario inputs for area, efficiency, seasonal water budget and release capacity. Real deployment requires measured reservoir storage/allocation, inflows, command-area acreage, canal capacity, delivery efficiencies and operating rules.
 
 ## Conclusion
-The completed framework provides a compact, reproducible decision-support prototype linking weather and crop state to irrigation demand and reservoir-allocation units. The most important next step beyond this term project is validation against measured irrigation/canal data and coupling with forecast weather and real command-area information.
+The completed framework now links weather and crop state to irrigation-demand prediction and then to constrained reservoir-release optimization. It demonstrates both accurate 2025 demand estimation and the operational effect of seasonal shortage and daily conveyance limits. The most important next step beyond this term project is validation against measured irrigation/canal releases and replacement of stress-test inputs with real reservoir storage, inflow, command-area and operating-rule data.
