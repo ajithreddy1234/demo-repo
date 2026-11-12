@@ -3,10 +3,17 @@ name: Build CE4400 Final Project
 on:
   push:
     paths:
-      - "Irrigation-Water-Demand-ML/src/**"
+      - "Irrigation-Water-Demand-ML/src/build_week2.py"
+      - "Irrigation-Water-Demand-ML/src/build_final.py"
+      - "Irrigation-Water-Demand-ML/src/allocation_from_iwr.py"
+      - "Irrigation-Water-Demand-ML/tests/**"
       - "Irrigation-Water-Demand-ML/config/**"
       - "Irrigation-Water-Demand-ML/requirements.txt"
       - ".github/workflows/irrigation_final.yml"
+
+concurrency:
+  group: ce4400-final
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -16,6 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -25,17 +34,21 @@ jobs:
         run: pip install -r Irrigation-Water-Demand-ML/requirements.txt
 
       - name: Run project sanity tests
-        run: python -m unittest discover -s Irrigation-Water-Demand-ML/tests -p "test_*.py"\n\n      - name: Rebuild validated dataset\n        run: python Irrigation-Water-Demand-ML/src/build_week2.py
+        run: python -m unittest discover -s Irrigation-Water-Demand-ML/tests -p "test_*.py"
+
+      - name: Rebuild validated dataset
+        run: python Irrigation-Water-Demand-ML/src/build_week2.py
 
       - name: Train final models and evaluate 2025
         run: python Irrigation-Water-Demand-ML/src/build_final.py
 
-      - name: Commit final project outputs
+      - name: Commit generated project outputs
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add Irrigation-Water-Demand-ML/data Irrigation-Water-Demand-ML/figures Irrigation-Water-Demand-ML/results Irrigation-Water-Demand-ML/reports Irrigation-Water-Demand-ML/models
           if ! git diff --cached --quiet; then
             git commit -m "Generate final CE4400 project results"
-            git push
           fi
+          git pull --rebase origin main
+          git push origin main
