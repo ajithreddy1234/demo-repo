@@ -1,0 +1,26 @@
+{
+  "model": "XGBoost + ET0",
+  "include_eto": true,
+  "features": [
+    "temp_mean_c",
+    "temp_max_c",
+    "temp_min_c",
+    "relative_humidity_pct",
+    "wind_speed_2m_m_s",
+    "solar_radiation_mj_m2_day",
+    "rainfall_mm",
+    "surface_pressure_kpa",
+    "kc",
+    "days_after_sowing",
+    "eto_mm_day",
+    "crop_stage"
+  ],
+  "target": "irrigation_requirement_mm",
+  "training_seasons": [
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "test_season": 2025
+}
