@@ -35,6 +35,7 @@ Gross release additionally requires actual conveyance and application efficienci
 - Validation R2: 0.9723
 
 ## Final 2025 test results
+All candidate models are shown for comparison, but the deployed/final model was locked using 2024 validation before consulting these test results.
                model features  train_rows  test_rows  MAE_mm_day  RMSE_mm_day       R2  MAE_m3_per_ha_day  RMSE_m3_per_ha_day
        XGBoost + ET0  raw+ET0         500        125    0.125429     0.212114 0.981809           1.254285            2.121140
              XGBoost      raw         500        125    0.134860     0.220123 0.980410           1.348598            2.201226
@@ -45,29 +46,29 @@ Neural Network + ET0  raw+ET0         500        125    0.208770     0.317750 0.
    Linear Regression      raw         500        125    0.741827     0.973691 0.616683           7.418271            9.736907
 
 ## Selected final model
-- Model: XGBoost + ET0
-- Feature set: raw+ET0
-- MAE: 0.1254 mm/day
-- RMSE: 0.2121 mm/day
-- R2: 0.9818
-- Allocation-equivalent MAE: 1.254 m3/ha/day
+- Model: XGBoost
+- Feature set: raw
+- MAE: 0.1349 mm/day
+- RMSE: 0.2201 mm/day
+- R2: 0.9804
+- Allocation-equivalent MAE: 1.349 m3/ha/day
 
 ## 2025 allocation interpretation
 - Reference seasonal net requirement: 1564.17 m3/ha
-- Predicted seasonal net requirement: 1593.13 m3/ha
-- Seasonal allocation difference: 28.96 m3/ha (1.85%)
+- Predicted seasonal net requirement: 1580.74 m3/ha
+- Seasonal allocation difference: 16.57 m3/ha (1.06%)
 - Reference peak daily requirement: 50.92 m3/ha/day
-- Predicted peak daily requirement: 50.46 m3/ha/day
+- Predicted peak daily requirement: 50.74 m3/ha/day
 
 ## Most influential final-model inputs
-Top five permutation-importance features: rainfall_mm, kc, eto_mm_day, solar_radiation_mj_m2_day, relative_humidity_pct
+Top five permutation-importance features: rainfall_mm, kc, solar_radiation_mj_m2_day, relative_humidity_pct, temp_max_c
 
 ## Growth-stage performance
  crop_stage  days  mean_reference_iwr_mm  mean_predicted_iwr_mm  MAE_mm_day
-development    35               1.486874               1.430889    0.166628
-    initial    20               0.978666               0.993448    0.072655
-late_season    30               0.897406               0.997684    0.167892
- mid_season    40               1.447020               1.485798    0.083918
+development    35               1.486874               1.393640    0.187536
+    initial    20               0.978666               0.992459    0.095111
+late_season    30               0.897406               1.020227    0.161456
+ mid_season    40               1.447020               1.471012    0.088695
 
 ## Limitations
 1. The target is physics-derived rather than measured farmer/canal irrigation.

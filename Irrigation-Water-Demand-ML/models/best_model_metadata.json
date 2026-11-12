@@ -1,6 +1,7 @@
 {
-  "model": "XGBoost + ET0",
-  "include_eto": true,
+  "model": "XGBoost",
+  "selection_basis": "lowest 2024 validation RMSE",
+  "include_eto": false,
   "features": [
     "temp_mean_c",
     "temp_max_c",
@@ -12,7 +13,6 @@
     "surface_pressure_kpa",
     "kc",
     "days_after_sowing",
-    "eto_mm_day",
     "crop_stage"
   ],
   "target": "irrigation_requirement_mm",
