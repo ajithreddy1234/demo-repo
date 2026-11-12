@@ -1,42 +1,114 @@
-# Machine-Learning-Based Irrigation Demand Prediction and Reservoir Allocation Optimization
+# Machine-Learning-Assisted Irrigation Demand Prediction and Reservoir Allocation Optimization
 
-This CE4400 Water Resources Engineering project builds a reproducible decision-support pipeline that estimates daily net irrigation requirement for grain maize from weather and crop-state variables, converts that prediction into reservoir-release demand, and optimizes the release schedule when seasonal water availability or daily conveyance capacity is constrained.
+## Singur Reservoir Case Study — CE4400 Water Resources Engineering
 
-## Final project scope
+This project combines **crop-water physics, machine learning and reservoir-allocation optimization** to estimate daily maize irrigation requirement and translate that demand into an operational water-allocation problem.
 
-Study area: Sangareddy, Telangana, India  
-Crop: Grain maize  
-Period: 2021-2025  
-Resolution: Daily crop-season records  
-Dataset size: 625 rows  
-Target: irrigation_requirement_mm
+The study is anchored to **Singur Reservoir, Sangareddy district, Telangana** as a real water-resources case-study context. Official reservoir characteristics are used for scale and plausibility checks. Where historical operational time series are unavailable, the project uses clearly labelled stress-test scenarios rather than fabricated reservoir data.
 
-The target is a physics-derived reference irrigation requirement. It is not measured farmer irrigation or measured dam release.
+---
 
-## End-to-end workflow
+## 1. Core research question
 
-1. Extract daily historical weather from NASA POWER.
-2. Verify units and clean the meteorological data.
-3. Build a 125-day maize crop calendar and stage-dependent Kc curve.
-4. Calculate FAO-56 reference evapotranspiration ET0.
-5. Calculate ETc = Kc x ET0.
-6. Estimate effective rainfall.
-7. Generate daily IWR = max(0, ETc - Peff).
-8. Convert IWR to net allocation using 1 mm over 1 ha = 10 m3.
-9. Train and compare regression models.
-10. Select the final model using 2024 validation only.
-11. Refit on 2021-2024 and evaluate once on the untouched 2025 season.
-12. Generate final model, plots, feature importance, stage-wise analysis and allocation summaries.\n13. Convert predicted net crop demand to gross reservoir-release demand using irrigated area and delivery efficiency.\n14. Optimize daily releases under seasonal-water and daily-release-cap constraints.\n15. Compare full-supply, seasonal-shortage and shortage-plus-capacity scenarios.
+**How much irrigation water does maize require under changing weather and crop conditions, and how should a limited irrigation-water allocation be distributed through the crop season?**
 
-## Inputs used for ML
+The project therefore has two linked layers:
 
-temp_mean_c, temp_max_c, temp_min_c, relative_humidity_pct, wind_speed_2m_m_s, solar_radiation_mj_m2_day, rainfall_mm, surface_pressure_kpa, kc, days_after_sowing, crop_stage
+1. **Prediction** — estimate daily net irrigation water requirement, IWR (mm/day).
+2. **Decision support** — convert predicted demand into reservoir-release demand and optimize releases under water-budget and delivery-capacity constraints.
 
-ET0 was also tested as an engineered physics-informed feature in separate model variants.
+---
 
-ETc, effective rainfall and allocation volume are not used as ML inputs because they are directly downstream of target construction.
+## 2. Why Singur Reservoir?
 
-## Models compared
+The weather/crop study point is in Sangareddy district, and Singur is a real multipurpose project on the Manjira River in the same district. This gives the ML study a defensible Water Resources Engineering context instead of using an abstract reservoir.
+
+Official project characteristics used in the case-study scale check:
+
+- Gross capacity at FRL: **29.91 TMC**
+- FRL: **523.60 m**
+- New irrigation ayacut: **40,000 acres ≈ 16,187 ha**
+- Irrigation allocation for Singur canals in the official project note: **2.00 TMC**
+- Canal-head discharges:
+  - Left Main Canal: **13.804 cumecs**
+  - Main Branch Canal: **5.479 cumecs**
+  - Right Main Canal: **1.614 cumecs**
+  - Combined listed head discharge: **20.897 cumecs**
+- Designed live capacity: **822.460 Mm³**
+- Remote-sensing assessed live capacity (2018): **812.037 Mm³**
+
+See `docs/SOURCES.md` and `reports/SINGUR_CASE_STUDY.md`.
+
+---
+
+## 3. Study design
+
+- Crop: **Grain maize**
+- Assumed sowing date: **15 June**
+- Crop duration: **125 days**
+- Period: **2021–2025**
+- Seasons: **5**
+- Daily crop-season observations: **625**
+- Missing cells after processing: **0**
+- Weather source: **NASA POWER Daily Point API**
+
+A single crop and location were deliberately used so the physical and ML relationships remain consistent and interpretable.
+
+---
+
+## 4. Input variables
+
+Base ML inputs:
+
+`temp_mean_c, temp_max_c, temp_min_c, relative_humidity_pct, wind_speed_2m_m_s, solar_radiation_mj_m2_day, rainfall_mm, surface_pressure_kpa, kc, days_after_sowing, crop_stage`
+
+`eto_mm_day` is tested separately as a physics-informed engineered feature.
+
+Variables **not** used as ML inputs:
+
+- `etc_mm_day`
+- `effective_rain_mm`
+- `net_allocation_m3_per_ha_day`
+
+These are directly downstream of target construction and would create leakage.
+
+---
+
+## 5. Crop-water physics
+
+Reference evapotranspiration is calculated using the FAO-56 Penman–Monteith framework.
+
+Crop evapotranspiration:
+
+`ETc = Kc × ET0`
+
+Net irrigation water requirement:
+
+`IWR = max(0, ETc − Peff)`
+
+where `Peff` is effective rainfall.
+
+Rainfall is therefore an **input that reduces reservoir irrigation demand**, not the prediction target.
+
+Dataset summary:
+
+- Mean ET0: **3.75 mm/day**
+- Mean ETc: **2.94 mm/day**
+- Mean IWR: **1.51 mm/day**
+- Maximum IWR: **5.65 mm/day**
+- Zero-IWR days: **248 / 625**
+
+---
+
+## 6. Machine-learning protocol
+
+Chronological split:
+
+- Training: **2021–2023**
+- Validation/model selection: **2024**
+- Final untouched test: **2025**
+
+Models compared:
 
 - Linear Regression
 - Decision Tree
@@ -46,145 +118,229 @@ ETc, effective rainfall and allocation volume are not used as ML inputs because 
 - XGBoost + ET0
 - MLP Neural Network + ET0
 
-Random Forest and XGBoost hyperparameters are selected using 2024 validation RMSE.
+Random Forest and XGBoost hyperparameters are selected using **2024 validation RMSE only**.
 
-## Final model selection
+The final model is locked before consulting the 2025 test season.
 
-The model was locked before consulting the 2025 final test.
+### Validation-selected final model
 
-Selected model: XGBoost  
-Selection basis: lowest 2024 validation RMSE
+**XGBoost (raw feature set)**
 
 2024 validation:
-- RMSE: 0.2695 mm/day
-- R2: 0.9723
 
-After selection, XGBoost was refit on 2021-2024 and tested on 2025.
+- RMSE: **0.2695 mm/day**
+- R²: **0.9723**
 
-## Final 2025 test result for the locked model
+After selection, XGBoost is refit on 2021–2024 and evaluated once on 2025.
 
-- MAE: 0.1349 mm/day
-- RMSE: 0.2201 mm/day
-- R2: 0.9804
-- Allocation-equivalent MAE: 1.349 m3/ha/day
+### Final 2025 test
 
-XGBoost + ET0 obtained a slightly lower 2025 RMSE of 0.2121 mm/day, but it is not retroactively declared the final model because the final model was already selected from 2024 validation.
+- MAE: **0.1349 mm/day**
+- RMSE: **0.2201 mm/day**
+- R²: **0.9804**
+- Allocation-equivalent MAE: **1.349 m³/ha/day**
 
-## Reservoir-allocation result
+XGBoost + ET0 happens to obtain a slightly lower 2025 RMSE of 0.2121 mm/day, but it is not retroactively declared the final model because test data are not used for model selection.
 
-For the 2025 maize season:
+---
 
-- Reference seasonal net irrigation requirement: 156.42 mm
-- Predicted seasonal net irrigation requirement: 158.07 mm
-- Reference seasonal net allocation: 1564.17 m3/ha
-- Predicted seasonal net allocation: 1580.74 m3/ha
-- Seasonal allocation difference: 16.57 m3/ha
-- Seasonal allocation difference: 1.06%
-- Reference peak daily allocation: 50.92 m3/ha/day
-- Predicted peak daily allocation: 50.74 m3/ha/day
+## 7. 2025 irrigation-allocation result
 
-For a known cultivated area A in hectares:
+For the validation-selected XGBoost model:
 
-Net command-area demand = 10 x predicted IWR x A
+- Reference seasonal net irrigation requirement: **156.42 mm**
+- Predicted seasonal net irrigation requirement: **158.07 mm**
+- Reference net allocation: **1564.17 m³/ha**
+- Predicted net allocation: **1580.74 m³/ha**
+- Seasonal allocation difference: **16.57 m³/ha = 1.06%**
+- Reference peak daily allocation: **50.92 m³/ha/day**
+- Predicted peak daily allocation: **50.74 m³/ha/day**
 
-Gross reservoir release additionally requires real conveyance and field-application efficiencies.
+Conversion:
 
+`Net command-area demand (m³/day) = 10 × IWR (mm/day) × crop area (ha)`
 
-## Prominent final upgrade: reservoir-constrained release optimization
+Gross release demand additionally requires project delivery efficiency.
 
-The final project does not stop at predicting crop demand. A linear-programming optimization layer now determines the daily reservoir release schedule.
+---
 
-For each day t:
+## 8. Singur case-study scale check
 
-- predicted IWR is converted to net crop demand,
-- net demand is converted to gross reservoir-release demand using delivery efficiency,
-- daily release is bounded by that day's demand,
-- daily release is bounded by the configured canal/release capacity,
-- cumulative release is bounded by the available seasonal irrigation-water budget.
+The official 40,000-acre ayacut is **not assumed to be entirely maize**.
 
-The optimization objective minimizes the **maximum relative daily irrigation deficit**. A second optimization stage then maximizes total water delivered while preserving that best achievable fairness level.
+The project therefore keeps a controlled **1000-ha maize block** for the operational demonstration.
 
-This is intentionally different from simply reducing every day's release by an arbitrary percentage.
+- 1000 ha = **6.18%** of the official new ayacut.
+- Scenario overall delivery efficiency: **70%**.
+- Predicted 2025 gross seasonal release requirement: **2,258,198 m³**.
+- This is only **3.99%** of the official 2.00-TMC Singur-canal irrigation allocation.
+- Predicted peak gross release requirement: **72,483 m³/day = 0.839 cumecs**.
+- This is **4.01%** of the combined listed Singur canal-head discharge.
 
-### Demonstration assumptions
+Therefore the smaller 25,292 m³/day capacity used in one optimizer stress test is **not** presented as actual Singur canal-head capacity. It represents a hypothetical local/sub-command bottleneck.
 
-To test the optimizer, the repository uses an explicitly labelled engineering stress-test scenario:
+---
 
-- maize area: 1000 ha
-- overall conveyance/application efficiency: 0.70
-- seasonal water availability: either 100% or 85% of predicted full gross demand
-- daily release capacity: either effectively unconstrained or 1.4 x mean gross daily demand
+## 9. CWC-style 10-day irrigation working table
 
-These are **scenario inputs**, not claimed measurements from an operating reservoir.
+The final 2025 daily XGBoost demand predictions are aggregated into **13 operating periods**.
 
-### 2025 reservoir scenario results
+The working table contains:
 
-The validation-selected XGBoost predictions imply a full gross seasonal irrigation requirement of:
+- period number
+- start and end date
+- number of days
+- mean predicted IWR
+- total net crop demand
+- total gross release requirement
+- peak gross daily release requirement
 
-**2,258,198 m3** for the 1000 ha / 70% efficiency demonstration case.
+File:
+
+`results/final/singur_10day_irrigation_working_table_2025.csv`
+
+This follows the 10-daily/monthly planning logic used in CWC irrigation-planning guidance.
+
+A complete historical Singur reservoir working table would also require measured:
+
+- beginning storage
+- period inflow
+- drinking/industrial releases
+- evaporation loss
+- spill
+- ending storage
+
+Those time series are **not fabricated** in this project.
+
+---
+
+## 10. Reservoir-constrained release optimization
+
+Decision variable:
+
+`x_t = reservoir irrigation release on day t`
+
+Constraints:
+
+- `0 ≤ x_t ≤ daily gross irrigation demand`
+- `x_t ≤ daily delivery/release capacity C`
+- `Σx_t ≤ seasonal irrigation-water budget W`
+
+Primary objective:
+
+**Minimize the maximum relative daily irrigation deficit.**
+
+A second optimization stage maximizes total water delivered while preserving the best achievable fairness level.
+
+This is intentionally different from applying an arbitrary percentage reduction to every day.
+
+---
+
+## 11. Reservoir stress-test scenarios
+
+All values below are **scenario assumptions**, not measured operating records.
+
+Common demonstration assumptions:
+
+- Maize area: **1000 ha**
+- Overall delivery efficiency: **0.70**
 
 | Scenario | Water-budget use | Minimum daily demand met | Maximum relative deficit |
 |---|---:|---:|---:|
-| Full supply, unconstrained release | 100.0% | 100.0% | 0.0% |
-| 15% seasonal shortage only | 100.0% | 85.0% | 15.0% |
-| 15% shortage + daily release cap | 76.54% | 34.89% | 65.11% |
+| Full supply, unconstrained release | 100.00% | 100.00% | 0.00% |
+| 15% seasonal shortage only | 100.00% | 85.00% | 15.00% |
+| 15% shortage + hypothetical local delivery bottleneck | 76.54% | 34.89% | 65.11% |
 
-The third scenario reveals an important operational result: even when a seasonal water budget remains available, insufficient daily release/conveyance capacity can prevent that water from meeting peak crop demand. In the stress test, about **450,317 m3** of the allocated seasonal budget remains unused because the daily release cap prevents timely delivery.
+In the combined shortage-and-local-capacity case, approximately **450,317 m³** of the allocated seasonal water remains unused because the hypothetical sub-command delivery limit prevents water from reaching the crop at the required peak rate.
 
-This makes the project a reservoir **decision-support and allocation-optimization** system rather than only a regression exercise.
+### Main engineering insight
 
-## Most influential inputs
+**Seasonal water availability alone does not guarantee irrigation reliability. Water must also be deliverable at the required time and rate.**
 
-Permutation importance on the locked final model identified:
+---
 
-1. rainfall_mm
-2. kc
-3. solar_radiation_mj_m2_day
-4. relative_humidity_pct
-5. temp_max_c
+## 12. Explainability
 
-This is physically sensible: rainfall directly reduces external irrigation need, while Kc represents crop-stage demand and radiation/humidity/temperature control atmospheric water demand.
+Top permutation-importance variables for the locked final model:
 
-## Repository structure
+1. rainfall
+2. Kc
+3. solar radiation
+4. relative humidity
+5. maximum temperature
 
-- config/project_config.json: study area and crop configuration
-- data/raw/: downloaded NASA POWER data and metadata
-- data/processed/: final 625-row ML dataset
-- docs/DATA_DICTIONARY.md: variables, units and roles
-- docs/METHODOLOGY.md: technical methodology
-- src/build_week2.py: data and hydrology pipeline
-- src/build_final.py: tuning, final testing and plots
-- src/allocation_from_iwr.py: converts IWR to command-area/reservoir allocation\n- src/reservoir_optimizer.py: optimizes daily reservoir releases under water-budget and release-cap constraints
-- results/week2/: preliminary results
-- results/final/: final metrics, predictions, feature importance, allocation summaries and reservoir optimization scenarios
-- figures/week2/: data-development figures
-- figures/final/: final model and allocation figures
-- models/best_model.joblib: serialized validation-selected model
-- models/best_model_metadata.json: model and feature metadata
-- reports/FINAL_PROJECT_REPORT.md: complete project summary
-- tests/test_allocation.py: allocation sanity tests\n- tests/test_reservoir_optimizer.py: optimization constraint tests
+This is physically consistent with the target-generation framework:
 
-## Reproducibility
+- rainfall offsets external irrigation need,
+- Kc represents crop-stage demand,
+- radiation, humidity and temperature govern atmospheric evaporative demand.
 
-The final GitHub Actions workflow:
+---
 
-1. installs dependencies,
-2. runs sanity tests,
-3. rebuilds the weather/crop-water dataset,
-4. trains and evaluates the final models,
-5. commits generated outputs back to the repository.
+## 13. End-to-end workflow
 
-The final workflow currently completes successfully.
+1. Download historical NASA POWER weather.
+2. Verify units and clean data.
+3. Generate maize crop calendar and Kc curve.
+4. Calculate FAO-56 ET0.
+5. Calculate ETc and effective rainfall.
+6. Generate reference daily IWR.
+7. Build the 625-row ML dataset.
+8. Train and validate regression models chronologically.
+9. Lock XGBoost using 2024 validation.
+10. Evaluate once on untouched 2025 data.
+11. Convert predicted IWR to m³/ha and command-area demand.
+12. Check the scenario scale against official Singur project characteristics.
+13. Aggregate demand into 10-day operating periods.
+14. Optimize release schedules under seasonal-water and local-delivery constraints.
+15. Generate figures, reports, model files and working tables automatically.
 
-## Important limitations
+---
 
-- The target is derived from FAO-based physics rather than observed farmer/canal irrigation.
-- Historical observed weather is used; operational forecasting would require forecast weather.
+## 14. Repository structure
+
+- `config/project_config.json` — study configuration
+- `data/raw/` — NASA POWER raw data and metadata
+- `data/processed/` — final crop-season ML dataset
+- `docs/DATA_DICTIONARY.md` — variables, units and roles
+- `docs/METHODOLOGY.md` — methodology
+- `docs/SOURCES.md` — authoritative public sources
+- `src/build_week2.py` — weather + hydrology pipeline
+- `src/build_final.py` — ML tuning and final test
+- `src/allocation_from_iwr.py` — irrigation-depth to volume conversion
+- `src/reservoir_optimizer.py` — constrained release optimizer
+- `src/singur_case_study.py` — official Singur scale check + 10-day table
+- `results/final/` — final metrics and operating tables
+- `figures/final/` — final figures
+- `models/best_model.joblib` — saved validation-selected model
+- `reports/FINAL_PROJECT_REPORT.md` — final technical report
+- `reports/SINGUR_CASE_STUDY.md` — Singur case-study note
+- `reports/RESERVOIR_OPTIMIZATION.md` — optimization note
+- `tests/` — allocation and optimization sanity tests
+
+The complete final GitHub Actions workflow rebuilds the dataset, runs tests, evaluates the ML models, creates the Singur case-study outputs, runs the optimizer and commits the generated results.
+
+---
+
+## 15. Limitations
+
+- IWR is physics-derived rather than directly measured farmer/canal irrigation.
+- Historical observed weather is used; operational forecasting would require weather forecasts.
 - Effective rainfall is an empirical approximation.
-- Soil moisture, deep percolation, runoff and actual canal losses are not measured.
-- The optimizer can calculate a release schedule, but real operation still requires actual reservoir allocation/storage, command-area acreage, canal capacity, delivery efficiencies, inflows and other operating constraints.
-- A genuine PINN is not claimed because the project does not have measured soil-water states and defensible boundary/initial conditions for a governing differential equation.
+- Soil-water storage is not dynamically observed.
+- The 1000-ha maize block and 70% efficiency are scenario assumptions.
+- The local bottleneck stress test is hypothetical and is not Singur's actual canal-head capacity.
+- Historical Singur inflow/storage/drinking-release/evaporation/spill time series were not available in the project and were not fabricated.
+- A real operating-policy model would require those observed reservoir records and operating rules.
 
-## Final interpretation
+---
 
-This is now a combined prediction-and-optimization decision-support system. It predicts crop irrigation requirement, translates that demand into reservoir-release units, and produces an optimized release schedule under water-availability and conveyance-capacity constraints while preserving a clear boundary between demonstrated scenarios and real operating-reservoir data.
+## Final contribution
+
+This project is a **reproducible Water Resources Engineering decision-support framework** that links:
+
+**FAO-56 crop-water physics → machine-learning irrigation-demand prediction → real-reservoir scale checking → 10-day irrigation planning → constrained reservoir-allocation optimization.**
+
+Its central engineering conclusion is simple but important:
+
+> Accurate demand prediction is useful only when reservoir water is both available **and deliverable at the time the crop requires it**.
