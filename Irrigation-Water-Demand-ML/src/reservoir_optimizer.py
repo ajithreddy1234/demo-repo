@@ -189,6 +189,46 @@ def run_scenario(
         index=False,
     )
 
+    report = [
+        "# Reservoir-Constrained Allocation Upgrade",
+        "",
+        "## Why this was added",
+        "The ML model estimates crop irrigation demand. This optimization layer converts that demand into an operational release schedule when the seasonal irrigation water budget is limited.",
+        "",
+        "## Optimization objective",
+        "Minimize the maximum relative daily irrigation deficit across the season, subject to:",
+        "- release on a day cannot exceed that day's gross irrigation demand,",
+        "- release cannot exceed the configured daily canal/release capacity,",
+        "- cumulative release cannot exceed the available seasonal irrigation-water budget.",
+        "",
+        "A second optimization stage maximizes total delivered water while preserving the best achievable fairness level.",
+        "",
+        "## Demonstration scenario",
+        f"- Irrigated maize area: {area_ha:.0f} ha",
+        f"- Overall delivery efficiency: {overall_efficiency:.2f}",
+        f"- Available seasonal water: {100.0 * available_fraction:.1f}% of full gross requirement",
+        f"- Daily release-cap factor: {daily_cap_factor:.2f} x mean gross daily demand",
+        "",
+        "These values are an explicit stress-test scenario, not claimed field measurements.",
+        "",
+        "## Results",
+        f"- Full gross seasonal requirement: {full_gross_requirement:.2f} m3",
+        f"- Available seasonal water: {available_water:.2f} m3",
+        f"- Optimized total release: {float(release.sum()):.2f} m3",
+        f"- Total gross deficit: {float(deficit.sum()):.2f} m3",
+        f"- Minimum daily demand met: {100.0 * float(demand_met_fraction.min()):.2f}%",
+        f"- Mean daily demand met: {100.0 * float(demand_met_fraction.mean()):.2f}%",
+        f"- Maximum relative deficit: {100.0 * max_relative_deficit:.2f}%",
+        f"- Final unused allocation budget: {float(storage_remaining[-1]):.2f} m3",
+        "",
+        "## Interpretation",
+        "This layer changes the project from demand prediction alone into reservoir decision support. When water is sufficient, the optimizer can meet predicted demand. Under shortage, it distributes the constrained water budget while minimizing the worst relative daily deficit rather than applying an arbitrary release rule.",
+        "",
+        "## Operational use",
+        "For a real reservoir deployment, the same optimizer accepts actual irrigated area, delivery efficiency, available irrigation allocation and daily release/canal capacity. Those inputs should come from the operating authority rather than being invented by the model.",
+    ]
+    (ROOT / "reports" / "RESERVOIR_OPTIMIZATION.md").write_text("\n".join(report))
+
     fig, ax = plt.subplots(figsize=(11, 5))
     ax.plot(out.index, out["gross_release_demand_m3_day"], label="Gross release required")
     ax.plot(out.index, out["optimized_release_m3_day"], label="Optimized release")
